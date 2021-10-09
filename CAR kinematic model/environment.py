@@ -90,30 +90,68 @@ class Environment:
 
 class Parking1:
     def __init__(self, car_pos):
-        self.car_obstacle = self.make_car()
-        self.walls = [[70,i] for i in range(-5,90) ]+\
-                     [[30,i] for i in range(10,105)]+\
-                     [[i,10] for i in range(30,36) ]+\
-                     [[i,90] for i in range(70,76) ] #+ [[i,20] for i in range(-5,50)]
+        self.car_obstacle_hori = self.make_car_hori()
+        self.car_obstacle_vert = self.make_car_vert()
+        self.car_obstacle_left = self.make_car_left()
+        self.car_obstacle_right = self.make_car_right()
+        self.walls = [[20,i] for i in range(25, 105)]+\
+                     [[20,i] for i in range(-5, 10)] +\
+                     [[60,i] for i in range(25,80) ]+\
+                     [[100,i] for i in range(25,80) ]
         # self.walls = [0,100]
         self.obs = np.array(self.walls)
-        self.cars = {1 : [[35,20]], 2 : [[65,20]], 3 : [[75,20]], 4 : [[95,20]],
-                     5 : [[35,32]], 6 : [[65,32]], 7 : [[75,32]], 8 : [[95,32]],
-                     9 : [[35,44]], 10: [[65,44]], 11: [[75,44]], 12: [[95,44]],
-                     13: [[35,56]], 14: [[65,56]], 15: [[75,56]], 16: [[95,56]],
-                     17: [[35,68]], 18: [[65,68]], 19: [[75,68]], 20: [[95,68]],
-                     21: [[35,80]], 22: [[65,80]], 23: [[75,80]], 24: [[95,80]]}
+        self.cars = {1 : [[95,45]],2 : [[27,35]],3 : [[27,47]],4 : [[27,59]],5 : [[27,71]]
+                    ,6 : [[53,35]],7 : [[53,47]],8 : [[53,59]],9 : [[53,71]]
+                     ,10 : [[30,100]],11 : [[45,100]],12 : [[60,100]],13 : [[75,100]],14 : [[90,100]],
+                     15 : [[68,33]],16 : [[68,41]],17 : [[68,49]],18 : [[68,57]],19 : [[68,65]],20 : [[68,73]],
+                     21 : [[95,33]],22 : [[95,59]],23 : [[95,73]]}
+        self.car_type = ["self(blank)", "left", "left", "left", "left",
+                         "right", "right", "right", "right",
+                         "hori", "hori", "hori", "hori","hori", "hori", "hori", "hori","hori", "hori", "hori",
+                         "vert", "vert", "vert"]
         self.end = self.cars[car_pos][0]
         self.cars.pop(car_pos)
 
     def generate_obstacles(self):
         for i in self.cars.keys():
             for j in range(len(self.cars[i])):
-                obstacle = self.car_obstacle + self.cars[i]
+                if self.car_type[i-1] == "hori":
+                    obstacle = self.car_obstacle_hori + self.cars[i]
+                elif self.car_type[i-1] == "vert":
+                    obstacle = self.car_obstacle_vert + self.cars[i]
+                elif self.car_type[i-1] == "left":
+                    obstacle = self.car_obstacle_left + self.cars[i]
+                elif self.car_type[i-1] == "right":
+                    obstacle = self.car_obstacle_right + self.cars[i]
                 self.obs = np.append(self.obs, obstacle)
         return self.end, np.array(self.obs).reshape(-1,2)
 
-    def make_car(self):
+    def make_car_vert(self):
         car_obstacle_x, car_obstacle_y = np.meshgrid(np.arange(-2,2), np.arange(-4,4))
         car_obstacle = np.dstack([car_obstacle_x, car_obstacle_y]).reshape(-1,2)
+        # car_obstacle = np.array([[0,0],[0,-1],[0,1],[-1,-1],[-1,0],[-1,1],[1,-1],[1,0],[1,1]])
+        return car_obstacle
+
+    def make_car_hori(self):
+        car_obstacle_x, car_obstacle_y = np.meshgrid(np.arange(-4,4), np.arange(-2,2))
+        car_obstacle = np.dstack([car_obstacle_x, car_obstacle_y]).reshape(-1,2)
+        # car_obstacle = np.array([[0,0],[0,-1],[0,1],[-1,-1],[-1,0],[-1,1],[1,-1],[1,0],[1,1]])
+        return car_obstacle
+
+    def make_car_right(self):
+        # car_obstacle = np.array([[1,4],[0,3],[1,3],[2,3],[-1,2],[0,2],[1,2],[2,2],[3,2],[-2,1],[-1,1],[0,1],[1,1],[2,1],[3,1],[4,1],[-2,1],[-1,0],[0,0],[1,0],[2,0],[3,0],[-3,0],[-2,-1],[-1,-1],[0,-1],[1,-1],[2,-1],[-4,-1],[-3,-1],[-2,1],[-1,-2],[0,-2],[1,-2],[-3,-2],[-4,-2],[-5,-2],[-2,-3],[-1,-3],[0,-3],[-3,-3],[-4,-3],[-3,-4],[-2,-4],[-1,-4],[-2,-5]])
+        car_obstacle = np.array(
+            [[1, 4], [0, 3], [1, 3], [2, 3], [-1, 2], [0, 2], [1, 2], [2, 2], [3, 2], [-2, 1], [-1, 1], [0, 1], [1, 1],
+             [2, 1], [3, 1], [4, 1], [-2, 1], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0], [-3, 0], [-2, 0], [-2, -1], [-1, -1],
+             [0, -1], [1, -1], [2, -1], [-4, -1], [-3, -1], [-2, -2], [-1, -2], [0, -2], [1, -2], [-3, -2], [-4, -2],
+             [-5, -2], [-2, -3], [-1, -3], [0, -3], [-3, -3], [-4, -3], [-3, -4], [-2, -4], [-1, -4], [-2, -5]])
+        return car_obstacle
+
+    def make_car_left(self):
+        car_obstacle = np.array(
+            [[-1, 4], [0, 3], [-1, 3], [-2, 3], [1, 2], [0, 2], [-1, 2], [-2, 2], [-3, 2], [2, 1], [1, 1], [0, 1], [-1, 1],
+             [-2, 1], [-3, 1], [-4, 1], [2, 1], [1, 0], [0, 0], [-1, 0], [-2, 0], [-3, 0], [3, 0], [2, 0], [2, -1],
+             [1, -1],
+             [0, -1], [-1, -1], [-2, -1], [4, -1], [3, -1], [2, -2], [1, -2], [0, -2], [-1, -2], [3, -2], [4, -2],
+             [5, -2], [2, -3], [1, -3], [0, -3], [3, -3], [4, -3], [3, -4], [2, -4], [1, -4], [2, -5]])
         return car_obstacle
