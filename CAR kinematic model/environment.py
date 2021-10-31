@@ -7,25 +7,26 @@ class Environment:
         #coordinates are in [x,y] format
         self.car_length = 85
         self.car_width = 40
-        self.trailer_length = 45
+        self.trailer_length = 55
         self.trailer_width = 40
         self.wheel_length = 15
         self.wheel_width = 7
-        self.wheel_positions = np.array([[26,15],[26,-15],[-26,15],[-26,-15]])
+        self.wheel_positions = np.array([[60,15],[60,-17.5],[0,15],[0,-17.5]])
+        self.trailer_wheel_positions = np.array([[0, 17.5], [0, -17.5]])
         
         self.color = np.array([0,0,255])/255
         self.wheel_color = np.array([20,20,20])/255
 
-        self.car_struct = np.array([[+self.car_length/2, +self.car_width/2],
-                                    [+self.car_length/2, -self.car_width/2],  
-                                    [-self.car_length/2, -self.car_width/2],
-                                    [-self.car_length/2, +self.car_width/2]], 
+        self.car_struct = np.array([[+self.car_length-10, +self.car_width/2],
+                                    [+self.car_length-10, -self.car_width/2],
+                                    [-10, -self.car_width/2],
+                                    [-10, +self.car_width/2]],
                                     np.int32)
 
-        self.trailer_struct = np.array([[+self.trailer_length/2, +self.trailer_width/2],
-                                    [+self.trailer_length/2, -self.trailer_width/2],
-                                    [-self.trailer_length/2, -self.trailer_width/2],
-                                    [-self.trailer_length/2, +self.trailer_width/2]],
+        self.trailer_struct = np.array([[+self.trailer_length/2+10, +self.trailer_width/2],
+                                    [+self.trailer_length/2+10, -self.trailer_width/2],
+                                    [-self.trailer_length/2+10, -self.trailer_width/2],
+                                    [-self.trailer_length/2+10, +self.trailer_width/2]],
                                     np.int32)
         
         self.wheel_struct = np.array([[+self.wheel_length/2, +self.wheel_width/2],
@@ -61,10 +62,14 @@ class Environment:
                     [np.sin(angle),  np.cos(angle)]])
         return ((R @ pts.T).T).astype(int)
 
-    def render(self, x, y, psi, psi2, zeta, delta):
+    def render(self, x, y, psi, psi2, delta):
         # x,y in 100 coordinates
         x = int(10*x)
         y = int(10*y)
+
+        d1_in_px = 100
+        trailer_x = x-(d1_in_px*np.cos(-psi2)).astype(int)
+        trailer_y = y+(d1_in_px*np.sin(-psi2)).astype(int)
         # x,y in 1000 coordinates
         # adding car body
         rotated_struct = self.rotate_car(self.car_struct, angle=psi)
@@ -72,10 +77,9 @@ class Environment:
         rendered = cv2.fillPoly(self.background.copy(), [rotated_struct], self.color)
 
         #adding trailer
-        d1_in_px = 100
+
         rotated_struct = self.rotate_car(self.trailer_struct, angle=psi2)
-        # rotated_struct = self.rotate_car(self.trailer_struct, angle=0)
-        rotated_struct += np.array([x-(d1_in_px*np.cos(zeta)).astype(int),y+(d1_in_px*np.sin(zeta)).astype(int)]) + np.array([10*self.margin,10*self.margin])
+        rotated_struct += np.array([trailer_x,trailer_y]) + np.array([10*self.margin,10*self.margin])
         rendered = cv2.fillPoly(rendered, [rotated_struct], self.color)
 
         # adding wheel
@@ -89,8 +93,15 @@ class Environment:
             rotated_wheel += np.array([x,y]) + wheel + np.array([10*self.margin,10*self.margin])
             rendered = cv2.fillPoly(rendered, [rotated_wheel], self.wheel_color)
 
+        # adding wheel
+        rotated_wheel_center = self.rotate_car(self.trailer_wheel_positions, angle=psi2)
+        for i, wheel in enumerate(rotated_wheel_center):
+            rotated_wheel = self.rotate_car(self.wheel_struct, angle=psi2)
+            rotated_wheel += np.array([trailer_x, trailer_y]) + wheel + np.array([10 * self.margin, 10 * self.margin])
+            rendered = cv2.fillPoly(rendered, [rotated_wheel], self.wheel_color)
+
         # gel
-        gel = np.vstack([np.random.randint(-50,-30,16),np.hstack([np.random.randint(-20,-10,8),np.random.randint(10,20,8)])]).T
+        gel = np.vstack([np.random.randint(-20,-10,16),np.hstack([np.random.randint(-20,-10,8),np.random.randint(10,20,8)])]).T
         gel = self.rotate_car(gel, angle=psi)
         gel += np.array([x,y]) + np.array([10*self.margin,10*self.margin])
         gel = np.vstack([gel,gel+[1,0],gel+[0,1],gel+[1,1]])

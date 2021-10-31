@@ -289,7 +289,7 @@ class ParkPathPlanning:
         x_ensure1 = x_ensure2 + l + s
         y_ensure1 = y_ensure2 + d + w
         #Potentailly reverse first array
-        ensure_path1 = np.vstack([np.arange(x_ensure1,x_ensure1+8,0.25),np.repeat(y_ensure1,8/0.25)]).T
+        ensure_path1 = np.vstack([np.arange(x_ensure1,x_ensure1+12,0.25),np.repeat(y_ensure1,12/0.25)]).T
         ensure_path2 = np.vstack([np.arange(x_ensure2-4,x_ensure2,0.25),np.repeat(y_ensure2,4/0.25)]).T
         park_path = self.plan_park_down_left(x_ensure2, y_ensure2)
 

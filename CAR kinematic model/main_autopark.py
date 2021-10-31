@@ -56,7 +56,7 @@ if __name__ == '__main__':
     controller = MPC_Controller()
     # controller = Linear_MPC_Controller()
 
-    res = env.render(my_car.x, my_car.y, my_car.psi, my_car.psi2, my_car.zeta, 0)
+    res = env.render(my_car.x, my_car.y, my_car.psi, my_car.psi2, 0)
     cv2.imshow('environment', res)
     key = cv2.waitKey(1)
     #############################################################################################
@@ -90,7 +90,7 @@ if __name__ == '__main__':
         
             acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
             my_car.update_state(my_car.move(acc,  delta))
-            res = env.render(my_car.x, my_car.y, my_car.psi, my_car.psi2, my_car.zeta, delta)
+            res = env.render(my_car.x, my_car.y, my_car.psi, my_car.psi2, delta)
             logger.log(point, my_car, acc, delta)
             cv2.imshow('environment', res)
             key = cv2.waitKey(1)
@@ -98,7 +98,7 @@ if __name__ == '__main__':
                 cv2.imwrite('res.png', res*255)
 
     # zeroing car steer
-    res = env.render(my_car.x, my_car.y, my_car.psi, my_car.psi2, my_car.zeta, 0)
+    res = env.render(my_car.x, my_car.y, my_car.psi, my_car.psi2, 0)
     logger.save_data()
     cv2.imshow('environment', res)
     key = cv2.waitKey()
