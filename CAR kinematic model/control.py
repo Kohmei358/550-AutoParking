@@ -4,21 +4,26 @@ import copy
 
 
 class Car_Dynamics:
-    def __init__(self, x_0, y_0, v_0, psi_0, length, dt):
+    def __init__(self, x_0, y_0, v_0, psi_0, psi2_0, zeta_0, d1, length, dt):
         self.dt = dt             # sampling time
         self.L = length          # vehicle length
         self.x = x_0
         self.y = y_0
         self.v = v_0
         self.psi = psi_0
-        self.state = np.array([[self.x, self.y, self.v, self.psi]]).T
+        self.psi2 = psi2_0
+        self.zeta = zeta_0
+        self.d1 = d1
+        self.state = np.array([[self.x, self.y, self.v, self.psi, self.psi2,self.zeta]]).T
 
     def move(self, accelerate, delta):
         x_dot = self.v*np.cos(self.psi)
         y_dot = self.v*np.sin(self.psi)
         v_dot = accelerate
         psi_dot = self.v*np.tan(delta)/self.L
-        return np.array([[x_dot, y_dot, v_dot, psi_dot]]).T
+        psi2_dot = self.v * np.sin(delta-self.psi2) / self.d1
+        zeta_dot = -(self.v / self.L)*(np.tan(delta) + (self.L*np.sin(self.zeta)/self.d1))
+        return np.array([[x_dot, y_dot, v_dot, psi_dot, psi2_dot, zeta_dot]]).T
 
     def update_state(self, state_dot):
         # self.u_k = command
@@ -28,6 +33,8 @@ class Car_Dynamics:
         self.y = self.state[1,0]
         self.v = self.state[2,0]
         self.psi = self.state[3,0]
+        self.psi2 = self.state[4,0]
+        self.zeta = self.state[5,0]
 
     
 class MPC_Controller:

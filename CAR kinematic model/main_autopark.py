@@ -13,6 +13,7 @@ if __name__ == '__main__':
     parser.add_argument('--x_start', type=int, default=3, help='X of start')
     parser.add_argument('--y_start', type=int, default=100, help='Y of start')
     parser.add_argument('--psi_start', type=int, default=0, help='psi of start')
+    parser.add_argument('--psi2_start', type=int, default=0, help='psi2 of start')
     parser.add_argument('--x_end', type=int, default=10, help='X of end')
     parser.add_argument('--y_end', type=int, default=10, help='Y of end')
     parser.add_argument('--parking', type=int, default=1, help='park position in parking1 out of 24')
@@ -50,12 +51,12 @@ if __name__ == '__main__':
 
     ########################### initialization ##################################################
     env = Environment(obs)
-    my_car = Car_Dynamics(start[0], start[1], 0, np.deg2rad(args.psi_start), length=2.8, dt=0.2)
+    my_car = Car_Dynamics(start[0], start[1], 0, np.deg2rad(args.psi_start),np.deg2rad(args.psi2_start),np.deg2rad(args.psi2_start),d1=5, length=3, dt=0.2)
     MPC_HORIZON = 5
     controller = MPC_Controller()
     # controller = Linear_MPC_Controller()
 
-    res = env.render(my_car.x, my_car.y, my_car.psi, 0)
+    res = env.render(my_car.x, my_car.y, my_car.psi, my_car.psi2, my_car.zeta, 0)
     cv2.imshow('environment', res)
     key = cv2.waitKey(1)
     #############################################################################################
@@ -89,7 +90,7 @@ if __name__ == '__main__':
         
             acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
             my_car.update_state(my_car.move(acc,  delta))
-            res = env.render(my_car.x, my_car.y, my_car.psi, delta)
+            res = env.render(my_car.x, my_car.y, my_car.psi, my_car.psi2, my_car.zeta, delta)
             logger.log(point, my_car, acc, delta)
             cv2.imshow('environment', res)
             key = cv2.waitKey(1)
@@ -97,7 +98,7 @@ if __name__ == '__main__':
                 cv2.imwrite('res.png', res*255)
 
     # zeroing car steer
-    res = env.render(my_car.x, my_car.y, my_car.psi, 0)
+    res = env.render(my_car.x, my_car.y, my_car.psi, my_car.psi2, my_car.zeta, 0)
     logger.save_data()
     cv2.imshow('environment', res)
     key = cv2.waitKey()

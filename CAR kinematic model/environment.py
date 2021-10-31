@@ -5,11 +5,13 @@ class Environment:
     def __init__(self,obstacles):
         self.margin = 5
         #coordinates are in [x,y] format
-        self.car_length = 80
+        self.car_length = 85
         self.car_width = 40
+        self.trailer_length = 45
+        self.trailer_width = 40
         self.wheel_length = 15
         self.wheel_width = 7
-        self.wheel_positions = np.array([[25,15],[25,-15],[-25,15],[-25,-15]])
+        self.wheel_positions = np.array([[26,15],[26,-15],[-26,15],[-26,-15]])
         
         self.color = np.array([0,0,255])/255
         self.wheel_color = np.array([20,20,20])/255
@@ -18,6 +20,12 @@ class Environment:
                                     [+self.car_length/2, -self.car_width/2],  
                                     [-self.car_length/2, -self.car_width/2],
                                     [-self.car_length/2, +self.car_width/2]], 
+                                    np.int32)
+
+        self.trailer_struct = np.array([[+self.trailer_length/2, +self.trailer_width/2],
+                                    [+self.trailer_length/2, -self.trailer_width/2],
+                                    [-self.trailer_length/2, -self.trailer_width/2],
+                                    [-self.trailer_length/2, +self.trailer_width/2]],
                                     np.int32)
         
         self.wheel_struct = np.array([[+self.wheel_length/2, +self.wheel_width/2],
@@ -53,7 +61,7 @@ class Environment:
                     [np.sin(angle),  np.cos(angle)]])
         return ((R @ pts.T).T).astype(int)
 
-    def render(self, x, y, psi, delta):
+    def render(self, x, y, psi, psi2, zeta, delta):
         # x,y in 100 coordinates
         x = int(10*x)
         y = int(10*y)
@@ -62,6 +70,13 @@ class Environment:
         rotated_struct = self.rotate_car(self.car_struct, angle=psi)
         rotated_struct += np.array([x,y]) + np.array([10*self.margin,10*self.margin])
         rendered = cv2.fillPoly(self.background.copy(), [rotated_struct], self.color)
+
+        #adding trailer
+        d1_in_px = 100
+        rotated_struct = self.rotate_car(self.trailer_struct, angle=psi2)
+        # rotated_struct = self.rotate_car(self.trailer_struct, angle=0)
+        rotated_struct += np.array([x-(d1_in_px*np.cos(zeta)).astype(int),y+(d1_in_px*np.sin(zeta)).astype(int)]) + np.array([10*self.margin,10*self.margin])
+        rendered = cv2.fillPoly(rendered, [rotated_struct], self.color)
 
         # adding wheel
         rotated_wheel_center = self.rotate_car(self.wheel_positions, angle=psi)
