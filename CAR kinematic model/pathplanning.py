@@ -277,23 +277,24 @@ class ParkPathPlanning:
         ry = np.array(ry)-self.margin+0.5
         path = np.vstack([rx,ry]).T
         path = path[::-1]
-        computed_angle = angle_of_line(path[-10][0],path[-10][1],path[-1][0],path[-1][1])
+        # computed_angle = angle_of_line(path[-10][0],path[-10][1],path[-1][0],path[-1][1])
+        #
+        # s = 4
+        # l = 8
+        # d = 3
+        # w = 4
+        #
+        # x_ensure2 = gx
+        # y_ensure2 = gy
+        # x_ensure1 = x_ensure2 + l + s
+        # y_ensure1 = y_ensure2 + d + w
+        # #Potentailly reverse first array
+        # ensure_path1 = np.vstack([np.arange(x_ensure1,x_ensure1+8,0.25),np.repeat(y_ensure1,8/0.25)]).T
+        # ensure_path2 = np.vstack([np.arange(x_ensure2-4,x_ensure2,0.25),np.repeat(y_ensure2,4/0.25)]).T
+        # park_path = self.plan_park_down_left(x_ensure2, y_ensure2)
 
-        s = 4
-        l = 8
-        d = 3
-        w = 4
-
-        x_ensure2 = gx
-        y_ensure2 = gy
-        x_ensure1 = x_ensure2 + l + s
-        y_ensure1 = y_ensure2 + d + w
-        #Potentailly reverse first array
-        ensure_path1 = np.vstack([np.arange(x_ensure1,x_ensure1+8,0.25),np.repeat(y_ensure1,8/0.25)]).T
-        ensure_path2 = np.vstack([np.arange(x_ensure2-4,x_ensure2,0.25),np.repeat(y_ensure2,4/0.25)]).T
-        park_path = self.plan_park_down_left(x_ensure2, y_ensure2)
-
-        return np.array([x_ensure1, y_ensure1]), park_path, ensure_path1, ensure_path2
+        # return np.array([x_ensure1, y_ensure1]), park_path, ensure_path1, ensure_path2
+        return path;
 
     def plan_park_down_left(self, x1,y1):
             s = 4

@@ -5,11 +5,11 @@ class Environment:
     def __init__(self,obstacles):
         self.margin = 5
         #coordinates are in [x,y] format
-        self.car_length = 80
+        self.car_length = 40
         self.car_width = 40
         self.wheel_length = 15
         self.wheel_width = 7
-        self.wheel_positions = np.array([[25,15],[25,-15],[-25,15],[-25,-15]])
+        self.wheel_positions = np.array([[0,15],[0,-15]])
         
         self.color = np.array([0,0,255])/255
         self.wheel_color = np.array([20,20,20])/255
@@ -66,20 +66,17 @@ class Environment:
         # adding wheel
         rotated_wheel_center = self.rotate_car(self.wheel_positions, angle=psi)
         for i,wheel in enumerate(rotated_wheel_center):
-            
-            if i <2:
-                rotated_wheel = self.rotate_car(self.wheel_struct, angle=delta+psi)
-            else:
-                rotated_wheel = self.rotate_car(self.wheel_struct, angle=psi)
+
+            rotated_wheel = self.rotate_car(self.wheel_struct, angle=psi)
             rotated_wheel += np.array([x,y]) + wheel + np.array([10*self.margin,10*self.margin])
             rendered = cv2.fillPoly(rendered, [rotated_wheel], self.wheel_color)
 
         # gel
-        gel = np.vstack([np.random.randint(-50,-30,16),np.hstack([np.random.randint(-20,-10,8),np.random.randint(10,20,8)])]).T
-        gel = self.rotate_car(gel, angle=psi)
-        gel += np.array([x,y]) + np.array([10*self.margin,10*self.margin])
-        gel = np.vstack([gel,gel+[1,0],gel+[0,1],gel+[1,1]])
-        rendered[gel[:,1],gel[:,0]] = np.array([60,60,135])/255
+        # gel = np.vstack([np.random.randint(-50,-30,16),np.hstack([np.random.randint(-20,-10,8),np.random.randint(10,20,8)])]).T
+        # gel = self.rotate_car(gel, angle=psi)
+        # gel += np.array([x,y]) + np.array([10*self.margin,10*self.margin])
+        # gel = np.vstack([gel,gel+[1,0],gel+[0,1],gel+[1,1]])
+        # rendered[gel[:,1],gel[:,0]] = np.array([60,60,135])/255
 
         new_center = np.array([x,y]) + np.array([10*self.margin,10*self.margin])
         self.background = cv2.circle(self.background, (new_center[0],new_center[1]), 2, [255/255, 150/255, 100/255], -1)

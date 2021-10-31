@@ -65,25 +65,28 @@ if __name__ == '__main__':
     path_planner = PathPlanning(obs)
 
     print('planning park scenario ...')
-    new_end, park_path, ensure_path1, ensure_path2 = park_path_planner.generate_park_scenario(int(start[0]),int(start[1]),int(end[0]),int(end[1]))
+    # new_end, park_path, ensure_path1, ensure_path2 = park_path_planner.generate_park_scenario(int(start[0]),int(start[1]),int(end[0]),int(end[1]))
     
     print('routing to destination ...')
-    path = path_planner.plan_path(int(start[0]),int(start[1]),int(new_end[0]),int(new_end[1]))
-    path = np.vstack([path, ensure_path1])
+    path = path_planner.plan_path(int(start[0]),int(start[1]),int(end[0]),int(end[1]))
+    # path = np.vstack([path, ensure_path1])
 
     print('interpolating ...')
     interpolated_path = interpolate_path(path, sample_rate=5)
-    interpolated_park_path = interpolate_path(park_path, sample_rate=2)
-    interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]])
+    # interpolated_park_path = interpolate_path(park_path, sample_rate=2)
+    # interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]])
 
     env.draw_path(interpolated_path)
-    env.draw_path(interpolated_park_path)
+    # env.draw_path(interpolated_park_path)
 
-    final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
+    # final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
+    final_path = interpolated_path
 
     #############################################################################################
 
     ################################## control ##################################################
+
+
     print('driving to destination ...')
     for i,point in enumerate(final_path):
         
@@ -95,6 +98,14 @@ if __name__ == '__main__':
             key = cv2.waitKey(1)
             if key == ord('s'):
                 cv2.imwrite('res.png', res*255)
+
+    while abs(my_car.psi) > 0.01:
+        my_car.v = 0
+        my_car.update_state(my_car.move(0,0.1))
+        res = env.render(my_car.x, my_car.y, my_car.psi, delta)
+        logger.log(point, my_car, acc, delta)
+        cv2.imshow('environment', res)
+        key = cv2.waitKey(1)
 
     # zeroing car steer
     res = env.render(my_car.x, my_car.y, my_car.psi, 0)

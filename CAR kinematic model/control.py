@@ -17,7 +17,8 @@ class Car_Dynamics:
         x_dot = self.v*np.cos(self.psi)
         y_dot = self.v*np.sin(self.psi)
         v_dot = accelerate
-        psi_dot = self.v*np.tan(delta)/self.L
+        # psi_dot = self.v*np.tan(delta)/self.L
+        psi_dot = delta
         return np.array([[x_dot, y_dot, v_dot, psi_dot]]).T
 
     def update_state(self, state_dot):
