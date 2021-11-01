@@ -77,10 +77,10 @@ if __name__ == '__main__':
     interpolated_park_path = interpolate_path(park_path, sample_rate=2)
     # interpolated_path = path
     # interpolated_park_path = park_path
-    # interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]])
-    interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path])
+    interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2])
+    # interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path])
 
-    # env.draw_path(interpolated_path)
+    env.draw_path(interpolated_path)
     env.draw_path(interpolated_park_path)
 
     # final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])

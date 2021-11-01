@@ -282,10 +282,10 @@ class ParkPathPlanning:
         s = 8
         l = 14
         d = 4
-        w = 8
-        s2 = 2
-        l2 = 2
-        d2 = 1
+        w = 7.5
+        s2 = 1.5
+        l2 = 1.5
+        d2 = 0.8
         w2 = 0.5
 
         x_ensure2 = gx
@@ -299,8 +299,8 @@ class ParkPathPlanning:
         ensure_path0 = np.vstack([np.arange(x_ensure0-20, x_ensure0 + 5, 1), np.repeat(y_ensure0, 20+5)]).T
         #Pull back strait, 20 less
         #At ES1
-        ensure_path1 = np.vstack([np.arange(x_ensure0,x_ensure0+2,0.5),np.repeat(y_ensure0,2/0.5)]).T
-        ensure_path2 = np.vstack([np.arange(x_ensure2-6,x_ensure2,0.5),np.repeat(y_ensure2,6/0.5)]).T
+        ensure_path1 = np.vstack([np.arange(x_ensure0,x_ensure0+2,0.2),np.repeat(y_ensure0,2/0.2)]).T
+        ensure_path2 = np.vstack([np.arange(x_ensure2,x_ensure2+3,0.2),np.repeat(y_ensure2,3/0.2)]).T
         park_path = self.plan_park_down_left(x_ensure2, y_ensure2, x_ensure1, y_ensure1, x_ensure0, y_ensure0)
 
         return np.array([x_ensure0-22, y_ensure0]), park_path, ensure_path0 ,ensure_path1, ensure_path2
@@ -310,7 +310,7 @@ class ParkPathPlanning:
             curve_x = np.array([])
             curve_y = np.array([])
 
-            sixdot_nine_a = 3  # Increase number to make middle slower
+            sixdot_nine_a = 2.6  # Increase number to make middle slower
 
             x = np.arange(x1, x0 + 1)
             circle_fun = (sixdot_nine_a ** 2 - (x - x0) ** 2)
@@ -334,7 +334,7 @@ class ParkPathPlanning:
             curve_x = np.append(curve_x, x[::-1])
             curve_y = np.append(curve_y, y[::-1])
 
-            sixdot_nine_b = 13 #Increase number to make middle slower
+            sixdot_nine_b = 12.65 #Increase number to make middle slower
 
             x = np.arange(x2, x1 + 1)
             circle_fun = (sixdot_nine_b ** 2 - (x - x1) ** 2)
@@ -347,10 +347,14 @@ class ParkPathPlanning:
             curve_x = np.append(curve_x, x[::-1])
             curve_y = np.append(curve_y, y[::-1])
 
+            sixdot_nine_b = 14
+
+            offset = 0
+
 
             x = np.arange(x2, x1 + 1)
             circle_fun = (sixdot_nine_b ** 2 - (x - x2) ** 2)
-            y = (np.sqrt(circle_fun[circle_fun >= 0]) + y2 + sixdot_nine_b)
+            y = (np.sqrt(circle_fun[circle_fun >= 0]) + y2 + sixdot_nine_b - offset)
             x = x[circle_fun >= 0]
             y = (y - 2 * (y - (y2 + sixdot_nine_b)))
             choices = y < y2 + sixdot_nine_b / 2

@@ -124,7 +124,6 @@ class Parking1:
                      # [[20, i] for i in range(80, 90)] +\
                      # [[40, i] for i in range(80, 91)]
                      # [[20, i] for i in range(20, 40)]
-            # self.walls = [0,100]
         self.obs = np.array(self.walls)
         self.cars = {1 : [[25,75]],2 : [[5,65]],3 : [[40,65]]}
         self.end = self.cars[car_pos][0]
