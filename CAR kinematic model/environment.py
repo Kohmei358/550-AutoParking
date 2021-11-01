@@ -9,6 +9,8 @@ class Environment:
         self.car_width = 40
         self.trailer_length = 55
         self.trailer_width = 40
+        self.trailer_con_length = 100
+        self.trailer_con_width = 7
         self.wheel_length = 15
         self.wheel_width = 7
         self.wheel_positions = np.array([[60,15],[60,-17.5],[0,15],[0,-17.5]])
@@ -27,6 +29,12 @@ class Environment:
                                     [+self.trailer_length/2+10, -self.trailer_width/2],
                                     [-self.trailer_length/2+10, -self.trailer_width/2],
                                     [-self.trailer_length/2+10, +self.trailer_width/2]],
+                                    np.int32)
+
+        self.trailer_con_struct = np.array([[+self.trailer_con_length/2+50, +self.trailer_con_width/2],
+                                    [+self.trailer_con_length/2+50, -self.trailer_con_width/2],
+                                    [-self.trailer_con_length/2+50, -self.trailer_con_width/2],
+                                    [-self.trailer_con_length/2+50, +self.trailer_con_width/2]],
                                     np.int32)
         
         self.wheel_struct = np.array([[+self.wheel_length/2, +self.wheel_width/2],
@@ -82,6 +90,10 @@ class Environment:
         rotated_struct += np.array([trailer_x,trailer_y]) + np.array([10*self.margin,10*self.margin])
         rendered = cv2.fillPoly(rendered, [rotated_struct], self.color)
 
+        rotated_struct = self.rotate_car(self.trailer_con_struct, angle=psi2)
+        rotated_struct += np.array([trailer_x,trailer_y]) + np.array([10*self.margin,10*self.margin])
+        rendered = cv2.fillPoly(rendered, [rotated_struct], np.array([90,90,90])/255)
+
         # adding wheel
         rotated_wheel_center = self.rotate_car(self.wheel_positions, angle=psi)
         for i,wheel in enumerate(rotated_wheel_center):
@@ -117,15 +129,14 @@ class Environment:
 class Parking1:
     def __init__(self, car_pos):
         self.car_obstacle_hori = self.make_car_hori()
-        self.walls = [[70,i] for i in range(-10, 100)] +\
-                     [[i,55] for i in range(-10, 100)]
-                     # [[i, 90] for i in range(20, 40)] +\
-                     # [[i,80] for i in range(20, 40)] + \
-                     # [[20, i] for i in range(80, 90)] +\
-                     # [[40, i] for i in range(80, 91)]
-                     # [[20, i] for i in range(20, 40)]
+        self.walls = [[60,i] for i in range(-10, 100)] +\
+                     [[i,55] for i in range(-10, 100)] +\
+                     [[i, 90] for i in range(20, 40)] +\
+                     [[i,80] for i in range(20, 40)] + \
+                     [[20, i] for i in range(80, 90)] +\
+                     [[40, i] for i in range(80, 91)]
         self.obs = np.array(self.walls)
-        self.cars = {1 : [[25,75]],2 : [[5,65]],3 : [[40,65]]}
+        self.cars = {1 : [[21,60]],2 : [[5,60]],3 : [[40,60]]}
         self.end = self.cars[car_pos][0]
         self.cars.pop(car_pos)
 

@@ -300,7 +300,7 @@ class ParkPathPlanning:
         #Pull back strait, 20 less
         #At ES1
         ensure_path1 = np.vstack([np.arange(x_ensure0,x_ensure0+2,0.2),np.repeat(y_ensure0,2/0.2)]).T
-        ensure_path2 = np.vstack([np.arange(x_ensure2,x_ensure2+3,0.2),np.repeat(y_ensure2,3/0.2)]).T
+        ensure_path2 = np.vstack([np.arange(x_ensure2,x_ensure2+4,0.2),np.repeat(y_ensure2,4/0.2)]).T
         park_path = self.plan_park_down_left(x_ensure2, y_ensure2, x_ensure1, y_ensure1, x_ensure0, y_ensure0)
 
         return np.array([x_ensure0-22, y_ensure0]), park_path, ensure_path0 ,ensure_path1, ensure_path2
@@ -334,7 +334,7 @@ class ParkPathPlanning:
             curve_x = np.append(curve_x, x[::-1])
             curve_y = np.append(curve_y, y[::-1])
 
-            sixdot_nine_b = 12.65 #Increase number to make middle slower
+            sixdot_nine_b = 12.9 #Increase if trailer goes up during backup
 
             x = np.arange(x2, x1 + 1)
             circle_fun = (sixdot_nine_b ** 2 - (x - x1) ** 2)
