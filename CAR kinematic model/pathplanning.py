@@ -293,7 +293,7 @@ class ParkPathPlanning:
         ensure_path2 = np.vstack([np.arange(x_ensure2-4,x_ensure2,0.25),np.repeat(y_ensure2,4/0.25)]).T
         park_path = self.plan_park_down_left(x_ensure2, y_ensure2)
 
-        return np.array([x_ensure1, y_ensure1]), park_path, ensure_path1, ensure_path2
+        return np.array([x_ensure1-4, y_ensure1]), park_path, ensure_path1, ensure_path2
 
     def plan_park_down_left(self, x1,y1):
             s = 4
