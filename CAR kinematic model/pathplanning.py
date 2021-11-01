@@ -240,7 +240,7 @@ class PathPlanning:
         self.ox = [int(item) for item in self.obs[:,0]]
         self.oy = [int(item) for item in self.obs[:,1]]
         self.grid_size = 1
-        self.robot_radius = 4
+        self.robot_radius = 6
         self.a_star = AStarPlanner(self.ox, self.oy, self.grid_size, self.robot_radius)
 
     def plan_path(self,sx, sy, gx, gy):    
@@ -281,49 +281,79 @@ class ParkPathPlanning:
 
         s = 4
         l = 8
-        d = 3
-        w = 4
+        d = 4
+        w = 5
+        s2 = 2
+        l2 = 4
+        d2 = 1
+        w2 = 2
 
         x_ensure2 = gx
         y_ensure2 = gy
         x_ensure1 = x_ensure2 + l + s
         y_ensure1 = y_ensure2 + d + w
+        x_ensure0 = x_ensure1 + l2 + s2
+        y_ensure0 = y_ensure1 - d2 - w2
         #Potentailly reverse first array
-        ensure_path1 = np.vstack([np.arange(x_ensure1,x_ensure1+12,0.25),np.repeat(y_ensure1,12/0.25)]).T
-        ensure_path2 = np.vstack([np.arange(x_ensure2-4,x_ensure2,0.25),np.repeat(y_ensure2,4/0.25)]).T
-        park_path = self.plan_park_down_left(x_ensure2, y_ensure2)
+        #The first one goes back a little extra (by 20 units)
+        ensure_path0 = np.vstack([np.arange(x_ensure0-20, x_ensure0 + 5, 1), np.repeat(y_ensure0, 20+5)]).T
+        #Pull back strait, 20 less
+        #At ES1
+        ensure_path1 = np.vstack([np.arange(x_ensure0,x_ensure0+2,0.5),np.repeat(y_ensure0,2/0.5)]).T
+        ensure_path2 = np.vstack([np.arange(x_ensure2-6,x_ensure2,0.5),np.repeat(y_ensure2,6/0.5)]).T
+        park_path = self.plan_park_down_left(x_ensure2, y_ensure2, x_ensure1, y_ensure1, x_ensure0, y_ensure0)
 
-        return np.array([x_ensure1, y_ensure1]), park_path, ensure_path1, ensure_path2
+        return np.array([x_ensure0-22, y_ensure0]), park_path, ensure_path0 ,ensure_path1, ensure_path2
 
-    def plan_park_down_left(self, x1,y1):
-            s = 4
-            l = 8
-            d = 3
-            w = 4
-
-            x0 = x1 + l + s
-            y0 = y1 + d + w
+    def plan_park_down_left(self, x2, y2, x1, y1, x0, y0):
 
             curve_x = np.array([])
             curve_y = np.array([])
-            x = np.arange(x1, x0+1)
-            circle_fun = (6.9 ** 2 - (x - x0) ** 2)
-            y = (np.sqrt(circle_fun[circle_fun >= 0]) + y0 - 6.9)
+
+            sixdot_nine_a = 3.3  # Increase number to make middle slower
+
+            x = np.arange(x1, x0 + 1)
+            circle_fun = (sixdot_nine_a ** 2 - (x - x0) ** 2)
+            y = (np.sqrt(circle_fun[circle_fun >= 0]) + y0 + sixdot_nine_a)
+            x = x[circle_fun >= 0]  # circle_fun > 0 means this x point  is part of the circle
+            y = (y - 2 * (y - (y0 + sixdot_nine_a))) #only needed for mirror
+            choices = y < y0 + sixdot_nine_a / 2 #Possible Mirror
+            x = x[choices]
+            y = y[choices]
+            curve_x = np.append(curve_x, x)
+            curve_y = np.append(curve_y, y)
+
+            x = np.arange(x1, x0 + 1)
+            circle_fun = (sixdot_nine_a ** 2 - (x - x1) ** 2)
+            y = (np.sqrt(circle_fun[circle_fun >= 0]) + y1 - sixdot_nine_a)
+            x = x[circle_fun >= 0]
+            # y = (y - 2 * (y - (y1 + sixdot_nine_a))) #mirror only
+            choices = y > y1 - sixdot_nine_a / 2
+            x = x[choices]
+            y = y[choices]
+            curve_x = np.append(curve_x, x)
+            curve_y = np.append(curve_y, y)
+
+            sixdot_nine_b = 6 #Increase number to make middle slower
+
+            x = np.arange(x2, x1 + 1)
+            circle_fun = (sixdot_nine_b ** 2 - (x - x1) ** 2)
+            y = (np.sqrt(circle_fun[circle_fun >= 0]) + y1 - sixdot_nine_b)
             x = x[circle_fun >= 0] #circle_fun > 0 means this x point  is part of the circle
             # y = (y - 2 * (y - (y0 - 6.9))) #only needed for mirror
-            choices = y > y0 - 6.9 / 2
+            choices = y > y1 - sixdot_nine_b / 2
             x = x[choices]
             y = y[choices]
             curve_x = np.append(curve_x, x[::-1])
             curve_y = np.append(curve_y, y[::-1])
 
 
-            x = np.arange(x1, x0+1)
-            circle_fun = (6.9 ** 2 - (x - x1) ** 2)
-            y = (np.sqrt(circle_fun[circle_fun >= 0]) + y1 + 6.9)
+            x = np.arange(x2, x1 + 1)
+            circle_fun = (sixdot_nine_b ** 2 - (x - x2) ** 2)
+            y = (np.sqrt(circle_fun[circle_fun >= 0]) + y2 + sixdot_nine_b)
             x = x[circle_fun >= 0]
-            y = (y-2*(y-(y1+6.9)))
-            choices = y < y1 + 6.9 / 2
+            y = (y - 2 * (y - (y2 + sixdot_nine_b)))
+            choices = y < y2 + sixdot_nine_b / 2
             x = x[choices]
             y = y[choices]
             curve_x = np.append(curve_x, x[::-1])
