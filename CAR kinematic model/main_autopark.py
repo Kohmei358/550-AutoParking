@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import numpy as np
 from time import sleep
@@ -64,40 +66,99 @@ if __name__ == '__main__':
     park_path_planner = ParkPathPlanning(obs)
     path_planner = PathPlanning(obs)
 
-    print('planning park scenario ...')
-    new_end, park_path, ensure_path1, ensure_path2 = park_path_planner.generate_park_scenario(int(start[0]),int(start[1]),int(end[0]),int(end[1]))
-    
-    print('routing to destination ...')
-    path = path_planner.plan_path(int(start[0]),int(start[1]),int(new_end[0]),int(new_end[1]))
-    path = np.vstack([path, ensure_path1])
-
-    print('interpolating ...')
-    interpolated_path = interpolate_path(path, sample_rate=5)
-    interpolated_park_path = interpolate_path(park_path, sample_rate=2)
-
-    # interpolated_path = path
-    # interpolated_park_path = park_path
-    interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]])
-
-    env.draw_path(interpolated_path)
-    env.draw_path(interpolated_park_path)
-
-    final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
+    # print('planning park scenario ...')
+    # # new_end, park_path, ensure_path1, ensure_path2 = park_path_planner.generate_park_scenario(int(start[0]),int(start[1]),int(end[0]),int(end[1]))
+    #
+    # print('routing to destination ...')
+    # path = path_planner.plan_path(int(start[0]),int(start[1]),int(end[0]),int(end[1]))
+    # # path = np.vstack([path, ensure_path1])
+    #
+    # print('interpolating ...')
+    # interpolated_path = interpolate_path(path, sample_rate=2)
+    # # interpolated_park_path = interpolate_path(park_path, sample_rate=2)
+    #
+    # # interpolated_path = path
+    # # interpolated_park_path = park_path
+    # # interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]])
+    #
+    # env.draw_path(interpolated_path)
+    # # env.draw_path(interpolated_park_path)
+    #
+    # final_path = np.vstack([interpolated_path])
 
     #############################################################################################
 
     ################################## control ##################################################
     print('driving to destination ...')
-    for i,point in enumerate(final_path):
-        
-            acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
-            my_car.update_state(my_car.move(acc,  delta))
-            res = env.render(my_car.x, my_car.y, my_car.psi, delta)
-            logger.log(point, my_car, acc, delta)
+
+    current_x = start[0]
+    current_y = start[1]
+
+    next_x = start[0]+5
+    next_y = start[1]-8
+
+    next_fire_tick_time = time.time() + 5
+    while True:
+        counter = 0
+        done = 0
+        while done == 0:
+            next_x, next_y = env.get_next_fire()
+            path = path_planner.plan_path(int(current_x), int(current_y), int(next_x), int(next_y))
+            print(str(current_x)+", "+str(current_y)+","+str(next_x)+", "+str(next_y))
             cv2.imshow('environment', res)
-            key = cv2.waitKey(1)
-            if key == ord('s'):
-                cv2.imwrite('res.png', res*255)
+            env.update_obstacle_colors()
+            if time.time() > next_fire_tick_time:
+                counter = counter + 1
+                if counter % 6 == 0:
+                    env.random_fire()
+                env.fire_tick()
+                next_fire_tick_time = time.time() + 5
+            if len(path) > 2:
+                print(len(path))
+                done = 1
+        try:
+            interpolated_path = interpolate_path(path, sample_rate=2)
+            # interpolated_path = path
+            env.draw_path(interpolated_path)
+            for i, point in enumerate(interpolated_path):
+
+                acc, delta = controller.optimize(my_car, interpolated_path[i:i + MPC_HORIZON])
+                my_car.update_state(my_car.move(acc, delta))
+                res = env.render(my_car.x, my_car.y, my_car.psi, delta)
+                logger.log(point, my_car, acc, delta)
+                cv2.imshow('environment', res)
+                key = cv2.waitKey(1)
+                if key == ord('s'):
+                    cv2.imwrite('res.png', res * 255)
+
+                if time.time() > next_fire_tick_time:
+                    counter = counter + 1
+                    if counter % 3 == 0:
+                        env.random_fire()
+                    env.fire_tick()
+                    next_fire_tick_time = time.time() + 5
+
+                env.update_obstacle_colors()
+
+            current_x = next_x
+            current_y = next_y
+
+            env.kill_fire(current_x+5, current_y+5)
+            next_x, next_y = env.get_next_fire()
+
+        except Exception as e:
+            print(e)
+            print("Trying new fire")
+            cv2.imshow('environment', res)
+            env.update_obstacle_colors()
+            if time.time() > next_fire_tick_time:
+                counter = counter + 1
+                if counter % 3 == 0:
+                    env.random_fire()
+                env.fire_tick()
+                next_fire_tick_time = time.time() + 5
+
+        next_x, next_y = env.get_next_fire()
 
     # zeroing car steer
     res = env.render(my_car.x, my_car.y, my_car.psi, 0)
