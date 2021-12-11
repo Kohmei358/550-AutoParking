@@ -95,7 +95,7 @@ class AStarPlanner:
             current = open_set[c_id]
 
             if current.x == goal_node.x and current.y == goal_node.y:
-                print("Find goal")
+                print("Find goal 2")
                 goal_node.parent_index = current.parent_index
                 goal_node.cost = current.cost
                 break
@@ -271,7 +271,7 @@ class ParkPathPlanning:
         self.robot_radius = 4
         self.a_star = AStarPlanner(self.ox, self.oy, self.grid_size, self.robot_radius)
 
-    def generate_park_scenario(self,sx, sy, gx, gy):    
+    def generate_park_scenario(self,sx, sy, gx, gy):
         rx, ry = self.a_star.planning(sx+self.margin, sy+self.margin, gx+self.margin, gy+self.margin)
         rx = np.array(rx)-self.margin+0.5
         ry = np.array(ry)-self.margin+0.5
