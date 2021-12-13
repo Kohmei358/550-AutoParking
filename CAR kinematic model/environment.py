@@ -132,7 +132,7 @@ class Parking1:
                 elif self.car_type[i - 1] == "right":
                     obstacle = self.car_obstacle_right + self.cars[i]
                 self.obs = np.append(self.obs, obstacle)
-        start = 108
+        start = 60
         start_y = 20
         vert_offset = 5
         front_offset = 30

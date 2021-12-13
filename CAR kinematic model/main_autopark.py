@@ -10,8 +10,8 @@ from utils import angle_of_line, make_square, DataLogger
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser() # 4,35
-    parser.add_argument('--x_start', type=int, default=80, help='X of start')
-    parser.add_argument('--y_start', type=int, default=30, help='Y of start')
+    parser.add_argument('--x_start', type=int, default=4, help='X of start')
+    parser.add_argument('--y_start', type=int, default=35, help='Y of start')
     parser.add_argument('--psi_start', type=int, default=0, help='psi of start')
     parser.add_argument('--x_end', type=int, default=90, help='X of end')
     parser.add_argument('--y_end', type=int, default=80, help='Y of end')
@@ -86,61 +86,63 @@ if __name__ == '__main__':
     ################################## control ##################################################
     print('driving to destination ...')
     MPC_reset = False
-    for i,point in enumerate(final_path):
-        
-            acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
-            my_car.update_state(my_car.move(acc,  delta))
-            res = env.render(my_car.x, my_car.y, my_car.psi, delta)
-            logger.log(point, my_car, acc, delta)
-            cv2.imshow('environment', res)
-            key = cv2.waitKey(1)
-            if key == ord('s'):
-                cv2.imwrite('res.png', res*255)
+    try:
+        for i,point in enumerate(final_path):
 
-            if my_car.y <= 35: #only live path plan when not near parking lot
-                print('generate obstacles')
-                end, obs = parking1.generate_obstacles(time=i)
-                env = Environment(obs)
-                park_path_planner = ParkPathPlanning(obs)
-                path_planner = PathPlanning(obs)
+                acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
+                my_car.update_state(my_car.move(acc,  delta))
+                res = env.render(my_car.x, my_car.y, my_car.psi, delta)
+                logger.log(point, my_car, acc, delta)
+                cv2.imshow('environment', res)
+                key = cv2.waitKey(1)
+                if key == ord('s'):
+                    cv2.imwrite('res.png', res*255)
 
-                try:
-                    print('planning park scenario ...')
-                    new_end, park_path, ensure_path1, ensure_path2 = park_path_planner.generate_park_scenario(round(my_car.x),
-                                                                                                              round(my_car.y),
-                                                                                                              int(end[0]),
-                                                                                                              int(end[1]))
-                    print('routing to destination ...')
-                    path = path_planner.plan_path(round(my_car.x), round(my_car.y), int(new_end[0]), int(new_end[1]))
-                    path = np.vstack([path, ensure_path1])
+                if my_car.y <= 0: #only live path plan when not near parking lot
+                    print('generate obstacles')
+                    end, obs = parking1.generate_obstacles(time=i)
+                    env = Environment(obs)
+                    park_path_planner = ParkPathPlanning(obs)
+                    path_planner = PathPlanning(obs)
 
-                    print('interpolating ...')
-                    interpolated_path = interpolate_path(path, sample_rate=5)
-                    interpolated_park_path = interpolate_path(park_path, sample_rate=2)
-                    interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]])
+                    try:
+                        print('planning park scenario ...')
+                        new_end, park_path, ensure_path1, ensure_path2 = park_path_planner.generate_park_scenario(round(my_car.x),
+                                                                                                                  round(my_car.y),
+                                                                                                                  int(end[0]),
+                                                                                                                  int(end[1]))
+                        print('routing to destination ...')
+                        path = path_planner.plan_path(round(my_car.x), round(my_car.y), int(new_end[0]), int(new_end[1]))
+                        path = np.vstack([path, ensure_path1])
 
+                        print('interpolating ...')
+                        interpolated_path = interpolate_path(path, sample_rate=5)
+                        interpolated_park_path = interpolate_path(park_path, sample_rate=2)
+                        interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]])
+
+                        env.draw_path(interpolated_path)
+                        env.draw_path(interpolated_park_path)
+
+                        final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
+                    except Exception as e:
+                        env.draw_path(interpolated_path)
+                        env.draw_path(interpolated_park_path)
+                        print(e)
+                else: #still draw current path
+                    if not MPC_reset:
+                        controller = MPC_Controller()
+                    MPC_reset = True
                     env.draw_path(interpolated_path)
                     env.draw_path(interpolated_park_path)
+                    # sleep(1)
+    except Exception as e2:
+        # zeroing car steer
+        res = env.render(my_car.x, my_car.y, my_car.psi, 0)
+        logger.save_data()
+        cv2.imshow('environment', res)
+        key = cv2.waitKey()
+        #############################################################################################
 
-                    final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
-                except Exception as e:
-                    env.draw_path(interpolated_path)
-                    env.draw_path(interpolated_park_path)
-                    print(e)
-            else: #still draw current path
-                if not MPC_reset:
-                    controller = MPC_Controller()
-                MPC_reset = True
-                env.draw_path(interpolated_path)
-                env.draw_path(interpolated_park_path)
-                sleep(1)
+        cv2.destroyAllWindows()
 
-    # zeroing car steer
-    res = env.render(my_car.x, my_car.y, my_car.psi, 0)
     logger.save_data()
-    cv2.imshow('environment', res)
-    key = cv2.waitKey()
-    #############################################################################################
-
-    cv2.destroyAllWindows()
-
